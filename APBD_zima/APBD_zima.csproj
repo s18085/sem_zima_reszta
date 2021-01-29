@@ -9,8 +9,10 @@
     <Folder Include="Controllers\" />
     <Folder Include="Model\" />
     <Folder Include="DAL\" />
+    <Folder Include="Services\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.113.7" />
   </ItemGroup>
 </Project>

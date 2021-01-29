@@ -14,9 +14,9 @@ namespace APBD_zima.DAL
         {
             _students = new List<Student>
             {
-                new Student {IdStudent=1, FirstName = "Antoni", LastName="Kowalski" },
-                new Student {IdStudent=2, FirstName = "Maciej", LastName="Wojtkowski" },
-                new Student {IdStudent=3, FirstName = "Szymon", LastName="Malinowski" }
+                new Student {IdStudent="1", FirstName = "Antoni", LastName="Kowalski" },
+                new Student {IdStudent="2", FirstName = "Maciej", LastName="Wojtkowski" },
+                new Student {IdStudent="3", FirstName = "Szymon", LastName="Malinowski" }
             };
         }
 

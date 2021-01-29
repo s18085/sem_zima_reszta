@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using APBD_zima.DAL;
+using APBD_zima.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,6 +28,7 @@ namespace APBD_zima
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IDbService, MockDbService>();
+            services.AddSingleton<IStudentsDbService, ServerDbService>();
             services.AddControllers();
         }
 

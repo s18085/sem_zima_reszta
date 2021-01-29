@@ -121,6 +121,31 @@ namespace APBD_zima.Services
 
         }
 
+        public Student findStudentById(string id)
+        {
+            var st1 = new Student();
+            using (var con = new SQLiteConnection(dbConString))
+            using (var com = con.CreateCommand())
+            {
+                com.CommandText = "select S.IndexNumber, S.FirstName, S.LastName, S.BirthDate, St.Name, E.Semester " +
+                                    "from Student S inner join Enrollment E on E.IdEnrollment = S.IdEnrollment " +
+                                    "inner join Studies St on St.IdStudy = E.IdStudy where S.IndexNumber = @id";
+                com.Parameters.AddWithValue("id", id);
+                con.Open();
+                var dr = com.ExecuteReader();
+                if (dr.Read())
+                {
+                    st1.IdStudent = dr["IndexNumber"].ToString();
+                    st1.FirstName = dr["FirstName"].ToString();
+                    st1.LastName = dr["LastName"].ToString();
+                    st1.BirthDate = dr["BirthDate"].ToString();
+                    st1.StudiesName = dr["Name"].ToString();
+                    st1.Semester = int.Parse(dr["Semester"].ToString());
+                }
+            }
+            return st1;
+        }
+
         public Enrollment PromoteStudents(string studies, int semester)
         {
             using (var con = new SQLiteConnection(dbConString))

@@ -10,6 +10,7 @@
     <Folder Include="Model\" />
     <Folder Include="DAL\" />
     <Folder Include="Services\" />
+    <Folder Include="Middlewares\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />

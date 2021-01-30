@@ -123,7 +123,7 @@ namespace APBD_zima.Services
 
         public Student findStudentById(string id)
         {
-            var st1 = new Student();
+            Student st1 = null;
             using (var con = new SQLiteConnection(dbConString))
             using (var com = con.CreateCommand())
             {
@@ -135,6 +135,7 @@ namespace APBD_zima.Services
                 var dr = com.ExecuteReader();
                 if (dr.Read())
                 {
+                    st1 = new Student();
                     st1.IdStudent = dr["IndexNumber"].ToString();
                     st1.FirstName = dr["FirstName"].ToString();
                     st1.LastName = dr["LastName"].ToString();

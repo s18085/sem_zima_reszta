@@ -22,6 +22,10 @@ namespace CW4.Controllers
         public IActionResult GetStudent(string id)
         {
             var st = _dbService.findStudentById(id);
+            if (st == null)
+            {
+                return NotFound("Student not found");
+            }
             return Ok(st);
         }
     }

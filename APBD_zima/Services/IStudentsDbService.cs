@@ -9,6 +9,12 @@ namespace APBD_zima.Services
     {
         public Enrollment PromoteStudents(string studies, int semester);
         public Enrollment EnrollStudent(Student st);
-        public Student findStudentById(string id);
+        public Student FindStudentById(string id);
+        public bool AuthenticateStudent(string index, string password);
+        public void SaveRefreshToken(string index, string refreshToken);
+        public string GetRefreshToken(string index);
+        public string GetUserSalt(string index);
+        public byte[] GetUserPassword(string index);
+        
     }
 }

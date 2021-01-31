@@ -1,17 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using APBD_zima.Controllers;
 using APBD_zima.Model;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace APBD_zima.Services
 {
     public class ServerDbService : IStudentsDbService
     {
         private string dbConString = "Data Source=/Users/DamianGoraj/Documents/DBs/sqlite-tools-osx-x86-3310100/s18085.db";
-        public ServerDbService()
+        public IConfiguration Configuration { get; set; }
+        public ServerDbService(IConfiguration configuration)
         {
+            Configuration = configuration;
+        }
+
+        public bool AuthenticateStudent(string index, string password)
+        {
+            using (var con = new SQLiteConnection(dbConString))
+            using (var com = con.CreateCommand())
+            {
+                var salt = GetUserSalt(index);
+                var hashedUserPass = GetUserPassword(index);
+                var rfc2898DeriveBytes = new Rfc2898DeriveBytes(password, Encoding.UTF8.GetBytes(salt + Configuration["Pepper"]), 100);
+                var hash = rfc2898DeriveBytes.GetBytes(24);
+                var res = hash.SequenceEqual(hash);
+
+                return res;
+            }
+        }
+        void AddPassword(string index, string password)
+        {
+            using (var con = new SQLiteConnection(dbConString))
+            using (var com = con.CreateCommand())
+            {
+                con.Open();
+                SQLiteTransaction trans = con.BeginTransaction();
+                com.Transaction = trans;
+                var random = new RNGCryptoServiceProvider();
+                int max_length = 32;
+                byte[] salt = new byte[max_length];
+                random.GetNonZeroBytes(salt);
+                var genSalt = Convert.ToBase64String(salt);
+                var rfc2898DeriveBytes = new Rfc2898DeriveBytes(password, Encoding.UTF8.GetBytes(genSalt + Configuration["Pepper"]), 100);
+                var hash = rfc2898DeriveBytes.GetBytes(24);
+                SQLiteParameter[] pars = new SQLiteParameter[3];
+                var dataParameter = new SQLiteParameter("Data", DbType.Binary) { Value = hash };
+                pars[0] = new SQLiteParameter("Salt", genSalt);
+                pars[1] = new SQLiteParameter("Index", index);
+                pars[2] = dataParameter;
+                com.CommandText = "update student set Password = @Data, Salt = @Salt where IndexNumber = @Index";
+                com.Parameters.AddRange(pars);
+                com.ExecuteNonQuery();
+                trans.Commit();
+            }
         }
 
         public Enrollment EnrollStudent(Student st)
@@ -121,7 +170,7 @@ namespace APBD_zima.Services
 
         }
 
-        public Student findStudentById(string id)
+        public Student FindStudentById(string id)
         {
             Student st1 = null;
             using (var con = new SQLiteConnection(dbConString))
@@ -226,6 +275,86 @@ namespace APBD_zima.Services
                     StartDate = stDate,
                     IdStudy = idStudy
                 };
+            }
+        }
+
+        public void SaveRefreshToken(string index, string refreshToken)
+        {
+            using (var con = new SQLiteConnection(dbConString))
+            using (var com = con.CreateCommand())
+            {
+                con.Open();
+                SQLiteTransaction trans = con.BeginTransaction();
+                com.Transaction = trans;
+                com.CommandText = "update student set RefreshToken = @refreshToken where IndexNumber = @index";
+                com.Parameters.AddWithValue("index", index);
+                com.Parameters.AddWithValue("refreshToken", refreshToken);
+                var dr = com.ExecuteNonQuery();
+                trans.Commit();
+            }
+        }
+        public string GetRefreshToken(string index)
+        {
+            using (var con = new SQLiteConnection(dbConString))
+            using (var com = con.CreateCommand())
+            {
+                con.Open();
+                SQLiteTransaction trans = con.BeginTransaction();
+                com.Transaction = trans;
+                com.CommandText = "select RefreshToken from student where IndexNumber = @index";
+                com.Parameters.AddWithValue("index", index);
+                using (var dr = com.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        return dr["RefreshToken"].ToString();
+                    }
+                }
+                return null;
+            }
+        }
+
+        public string GetUserSalt(string index)
+        {
+            using (var con = new SQLiteConnection(dbConString))
+            using (var com = con.CreateCommand())
+            {
+                con.Open();
+                SQLiteTransaction trans = con.BeginTransaction();
+                com.Transaction = trans;
+                com.CommandText = "select Salt from student where IndexNumber = @index";
+                com.Parameters.AddWithValue("index", index);
+                using (var dr = com.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        return dr["Salt"].ToString();
+                    }
+                }
+                return null;
+            }
+        }
+
+       public byte[] GetUserPassword(string index)
+        {
+            using (var con = new SQLiteConnection(dbConString))
+            using (var com = con.CreateCommand())
+            {
+                con.Open();
+                SQLiteTransaction trans = con.BeginTransaction();
+                com.Transaction = trans;
+                com.CommandText = "select Password from student where IndexNumber = @index";
+                com.Parameters.AddWithValue("index", index);
+                byte[] res = new byte[24];
+                using (var dr = com.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        dr.GetBytes(0, 0, res, 0, 24);
+                        return res;
+                    }
+                }
+                return null;
             }
         }
     }
